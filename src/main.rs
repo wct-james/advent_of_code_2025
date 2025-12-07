@@ -1,5 +1,6 @@
 use advent_of_code_2025::days::day_01::day_01;
 
 fn main() {
-    day_01();
+    let day_one_part_one = day_01("data/day_01.txt").unwrap();
+    println!("day 01, part 1: {:}", day_one_part_one);
 }

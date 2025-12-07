@@ -1,52 +1,73 @@
-use std::io::Error;
+use std::{
+    fmt::{Debug, Display},
+    str::FromStr,
+};
+
+use anyhow::{Error, Result};
 
 use super::super::file_parser::parse_input_file;
 
+#[derive(Debug)]
+enum Direction {
+    Left,
+    Right,
+}
+
+impl Display for Direction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 struct Turn {
-    direction: char,
+    direction: Direction,
     turns: i16,
 }
 
-fn new_turn(input: String) -> Result<Turn, Error> {
-    let mut nums = input.clone();
-    let direction = nums.remove(0);
-    let turns = nums.parse().expect("should parse");
-    Ok(Turn { direction, turns })
+impl FromStr for Turn {
+    type Err = Error;
+
+    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+        let (direction_str, turns_str) = s.split_at(1);
+        let direction: Direction = match direction_str {
+            "L" => Direction::Left,
+            "R" => Direction::Right,
+            e => anyhow::bail!("unexpected character: {}", e),
+        };
+
+        let turns: i16 = match turns_str.parse() {
+            Ok(t) => t,
+            Err(e) => anyhow::bail!("couldn't parse string as number: {:}", e),
+        };
+
+        Ok(Turn { direction, turns })
+    }
 }
 
-pub fn day_01() {
+pub fn day_01(file_name: &str) -> Result<String> {
     let mut position: i16 = 50;
     let mut code = 0;
 
-    let data = match parse_input_file("data/day_01.txt") {
-        Ok(data) => data.into_iter().map(|x| new_turn(x).expect("didn't work")),
-        Err(e) => panic!("{:}", e),
+    let data: Vec<Turn> = match parse_input_file(file_name) {
+        Ok(lines) => lines
+            .into_iter()
+            .map(|line| line.parse::<Turn>().map_err(Error::msg))
+            .collect::<Result<Vec<Turn>, _>>()?,
+        Err(e) => return Err(e.context("error parsing input file")),
     };
-
-    println!("starts at {}", position);
 
     for d in data {
         let sign = match d.direction {
-            'L' => -1,
-            'R' => 1,
-            _ => 0,
+            Direction::Left => -1,
+            Direction::Right => 1,
         };
 
-        position += sign * d.turns;
-
-        while position > 99 {
-            position -= 100
-        }
-        while position < 0 {
-            position += 100
-        }
-
-        println!("got {} {}, turning to {}", d.direction, d.turns, position);
+        position = (position + sign * d.turns).rem_euclid(100);
 
         if position == 0 {
             code += 1
         }
     }
 
-    println!("code is {}", code);
+    Ok(format!("{:}", code))
 }
