@@ -19,9 +19,10 @@ impl Display for Direction {
     }
 }
 
+#[derive(Debug)]
 struct Turn {
     direction: Direction,
-    turns: i16,
+    number_of_turns: i16,
 }
 
 impl FromStr for Turn {
@@ -35,20 +36,24 @@ impl FromStr for Turn {
             e => anyhow::bail!("unexpected character: {}", e),
         };
 
-        let turns: i16 = match turns_str.parse() {
+        let number_of_turns: i16 = match turns_str.parse() {
             Ok(t) => t,
             Err(e) => anyhow::bail!("couldn't parse string as number: {:}", e),
         };
 
-        Ok(Turn { direction, turns })
+        Ok(Turn {
+            direction,
+            number_of_turns,
+        })
     }
 }
 
 pub fn day_01(file_name: &str) -> Result<String> {
     let mut position: i16 = 50;
     let mut code = 0;
+    let mut wraps = 0;
 
-    let data: Vec<Turn> = match parse_input_file(file_name) {
+    let turns: Vec<Turn> = match parse_input_file(file_name) {
         Ok(lines) => lines
             .into_iter()
             .map(|line| line.parse::<Turn>().map_err(Error::msg))
@@ -56,18 +61,51 @@ pub fn day_01(file_name: &str) -> Result<String> {
         Err(e) => return Err(e.context("error parsing input file")),
     };
 
-    for d in data {
-        let sign = match d.direction {
+    println!("starting at 50");
+
+    for turn in turns {
+        let sign = match turn.direction {
             Direction::Left => -1,
             Direction::Right => 1,
         };
 
-        position = (position + sign * d.turns).rem_euclid(100);
+        let increment = position + sign * turn.number_of_turns;
+
+        position = increment.rem_euclid(100);
+        let wrapped_count = increment.div_euclid(100).abs();
+
+        wraps += wrapped_count;
+
+        println!("moving to: {}, passed 0 {} times", position, wrapped_count);
 
         if position == 0 {
             code += 1
         }
     }
 
-    Ok(format!("{:}", code))
+    Ok(format!("part_1: {:}, part_2: {:}", code, wraps))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // #[test]
+    // fn part_1_example() {
+    //     let answer = day_01("data/day_01_test.txt").expect("should work");
+    //     assert!(answer.contains("part_1: 3"))
+    // }
+    //
+    // #[test]
+    // fn part_2_example_1() {
+    //     let answer = day_01("data/day_01_test.txt").expect("should work");
+    //     println!("{}", answer);
+    //     assert!(answer.contains("part_2: 6"))
+    // }
+    #[test]
+    fn part_2_example_2() {
+        let answer = day_01("data/day_01_test_2.txt").expect("should work");
+        println!("{}", answer);
+        assert!(answer.contains("part_2: 10"))
+    }
 }
