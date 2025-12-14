@@ -1,7 +1,7 @@
 use advent_of_code_2025::days::{
     day_01::{day_01, day_01_part_2},
     day_02::{day_02_part_01::day_02, day_02_part_02::day_02_part_02},
-    day_03::day_03_part_01::day_03_part_01,
+    day_03::{day_03_part_01::day_03_part_01, day_03_part_02::day_03_part_02},
 };
 
 fn main() {
@@ -20,4 +20,6 @@ fn main() {
     let day_three_file = "data/day_03.txt";
     let day_three_part_one = day_03_part_01(day_three_file).unwrap();
     println!("day 03, part 1: {:}", day_three_part_one);
+    let day_three_part_two = day_03_part_02(day_three_file).unwrap();
+    println!("day 03, part 1: {:}", day_three_part_two);
 }
